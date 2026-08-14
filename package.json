@@ -1,0 +1,14 @@
+{
+    "name": "bigdonate",
+    "version": "1.0.0",
+    "description": "BIGDONATE – Support BIGST4CK",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.18.2"
+    },
+    "author": "bigmanjtech™",
+    "license": "MIT"
+}
