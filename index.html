@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BIGDONATE – Support BIGST4CK</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div class="container" id="donationContainer">
+        <!-- Logo / Header -->
+        <div class="header">
+            <h1>💖 BIGDONATE</h1>
+            <p>Support <strong>BIGST4CK</strong> – Every coin helps! 🙏</p>
+        </div>
+
+        <!-- Donation Form -->
+        <div class="card" id="donationForm">
+            <h2>📱 Mobile Money</h2>
+            <p class="subtext">
+                All networks accepted: VODACOM · TIGO · AIRTEL · HALOTEL · TTCL · YAS
+            </p>
+
+            <form id="donateForm">
+                <div class="form-group">
+                    <label for="phone">📞 Your Phone Number</label>
+                    <input
+                        type="tel"
+                        id="phone"
+                        placeholder="e.g., 255XXXXXXXXX"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="amount">💰 Amount (TZS)</label>
+                    <input
+                        type="number"
+                        id="amount"
+                        placeholder="e.g., 5000"
+                        min="1"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="network">🌐 Network</label>
+                    <select id="network" required>
+                        <option value="">Select your network...</option>
+                        <option value="VODACOM">VODACOM</option>
+                        <option value="TIGO">TIGO</option>
+                        <option value="AIRTEL">AIRTEL</option>
+                        <option value="HALOTEL">HALOTEL</option>
+                        <option value="TTCL">TTCL</option>
+                        <option value="YAS">YAS</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-donate">
+                    🚀 Donate Now
+                </button>
+            </form>
+
+            <div class="footer-info">
+                <p>📌 You'll be redirected to complete payment via Halopesa.</p>
+                <p>📱 Receiver: <strong>0636756591</strong> (Halotel)</p>
+            </div>
+        </div>
+
+        <!-- Processing State -->
+        <div id="processing" class="card" style="display: none">
+            <div class="loader"></div>
+            <h2>⏳ Processing your donation...</h2>
+            <p>Please wait while we confirm your payment.</p>
+            <p class="subtext">You will receive a confirmation SMS shortly.</p>
+        </div>
+
+        <!-- Success State (with confetti & party) -->
+        <div id="success" class="card success" style="display: none">
+            <div class="party-animation">
+                <span class="emoji-rain">🎉🎉🎉</span>
+                <span class="emoji-rain">🎊🎊🎊</span>
+                <span class="emoji-rain">💖💖💖</span>
+                <span class="emoji-rain">🌟⭐🌟</span>
+            </div>
+            <div class="success-content">
+                <div class="big-emoji">〽️🎉🎉🎉🎉</div>
+                <h2>🎊 DONATION SUCCESSFUL! 🎊</h2>
+                <p class="large-text">Thank you for supporting BIGST4CK! 🙏</p>
+                <div class="shapes">
+                    <span class="shape">@</span>
+                    <span class="shape">#</span>
+                    <span class="shape">$</span>
+                    <span class="shape">&</span>
+                    <span class="shape">£</span>
+                    <span class="shape">¢</span>
+                    <span class="shape">€</span>
+                    <span class="shape">¥</span>
+                    <span class="shape">π</span>
+                    <span class="shape">×</span>
+                    <span class="shape">∆</span>
+                    <span class="shape">✓</span>
+                    <span class="shape">°</span>
+                    <span class="shape">¢</span>
+                    <span class="shape">^</span>
+                    <span class="shape">~</span>
+                    <span class="shape">+</span>
+                    <span class="shape">{</span>
+                    <span class="shape">$</span>
+                    <span class="shape">$</span>
+                    <span class="shape">:</span>
+                    <span class="shape">#</span>
+                    <span class="shape">+</span>
+                    <span class="shape">#</span>
+                    <span class="shape">&</span>
+                    <span class="shape">$</span>
+                    <span class="shape">#</span>
+                    <span class="shape">(</span>
+                    <span class="shape">✓</span>
+                    <span class="shape">¢</span>
+                    <span class="shape">=</span>
+                    <span class="shape">%</span>
+                </div>
+                <div class="big-brand">
+                    <h1>BIGST4CK</h1>
+                </div>
+                <p class="subtext">🎉 You're amazing! 🎉</p>
+                <button class="btn-return" onclick="resetDonation()">
+                    🔄 Donate Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti Canvas -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
