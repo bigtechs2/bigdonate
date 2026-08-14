@@ -114,10 +114,24 @@ form.addEventListener('submit', async (e) => {
     processing.style.display = 'block';
     success.style.display = 'none';
 
-    // ─── Simulate API Call ───
+    // ─── Call Halopesa API ───
     try {
-        // Replace this with your actual API call to Halopesa
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const response = await fetch('https://your-halopesa-api.com/donate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: phone,
+                amount: amount,
+                network: network,
+                receiver: '0636756591'
+            })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Payment failed');
+        }
 
         // ─── SUCCESS ───
         processing.style.display = 'none';
@@ -130,7 +144,7 @@ form.addEventListener('submit', async (e) => {
         }, 8000);
 
     } catch (error) {
-        alert('Payment failed. Please try again.');
+        alert(`❌ Payment failed: ${error.message}`);
         donationForm.style.display = 'block';
         processing.style.display = 'none';
     }
