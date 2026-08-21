@@ -11,11 +11,11 @@ app.use(express.static(__dirname));
 const ACCESS_KEY = process.env.SONICPESA_API_KEY;
 const ENV = process.env.SONICPESA_ENV || 'sandbox';
 
-// ─── Correct SonicPesa endpoint ───
-const BASE_URL = 'https://api.sonicpesa.com/v1';
+// ─── Official SonicPesa Endpoint ───
+const API_URL = 'https://api.sonicpesa.com/api/v1/payment/create_order';
 
 console.log(`🔗 SonicPesa Environment: ${ENV}`);
-console.log(`📡 API URL: ${BASE_URL}`);
+console.log(`📡 API URL: ${API_URL}`);
 
 // ─── Donation Endpoint ───
 app.post('/api/donate', async (req, res) => {
@@ -30,27 +30,26 @@ app.post('/api/donate', async (req, res) => {
         }
 
         const cleanPhone = phone.replace(/\D/g, '');
-        const reference = `BIGDONATE-${Date.now()}`;
 
-        // ─── SonicPesa Payload (based on their curl example) ───
+        // ─── SonicPesa Payload (from official docs) ───
         const payload = {
-            phone: cleanPhone,
+            buyer_email: `${cleanPhone}@donor.com`, // Placeholder email
+            buyer_name: 'Donor',
+            buyer_phone: cleanPhone,
             amount: parseInt(amount),
-            currency: 'TZS',
-            reference: reference,
-            callback_url: `${req.protocol}://${req.get('host')}/api/webhook`
+            currency: 'TZS'
         };
 
         console.log('📤 Sending to SonicPesa:', JSON.stringify(payload, null, 2));
 
-        // ─── Use the correct endpoint and authentication ───
+        // ─── Send request ───
         const response = await axios.post(
-            `${BASE_URL}/pay`,  // Correct endpoint from SonicPesa website
+            API_URL,
             payload,
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-API-KEY': ACCESS_KEY  // Correct authentication header
+                    'X-API-KEY': ACCESS_KEY
                 },
                 timeout: 45000
             }
@@ -58,10 +57,11 @@ app.post('/api/donate', async (req, res) => {
 
         console.log('📥 SonicPesa Response:', JSON.stringify(response.data, null, 2));
 
-        if (response.data && response.data.status === 'pending') {
+        // ─── Check response ───
+        if (response.data && response.data.status === 'success') {
             return res.json({
                 success: true,
-                transactionId: response.data.transaction_id || response.data.id,
+                transactionId: response.data.data?.order_id || response.data.data?.reference,
                 message: 'USSD prompt sent to your phone'
             });
         } else {
