@@ -1,35 +1,63 @@
-// ─── MATRIX RAIN ───
+// ─── NEON MATRIX RAIN (Blue / Grey) ───
 const matrixCanvas = document.getElementById('matrixCanvas');
 const mctx = matrixCanvas.getContext('2d');
-let matrixChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.<>?/";
-let matrixDrops = [];
+
+// ─── All special symbols ───
+const symbols = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&£¢€¥π×∆✓°¢^~+{$$:#+#&$#(✓¢=%";
+const matrixChars = symbols.split('');
+
+let drops = [];
+const fontSize = 20;
+let columns;
 
 function resizeMatrix() {
     matrixCanvas.width = window.innerWidth;
     matrixCanvas.height = window.innerHeight;
-    matrixDrops = [];
-    const columns = Math.floor(matrixCanvas.width / 20);
+    columns = Math.floor(matrixCanvas.width / fontSize);
+    drops = [];
     for (let i = 0; i < columns; i++) {
-        matrixDrops[i] = Math.random() * -100;
+        drops[i] = Math.random() * -100;
     }
 }
 window.addEventListener('resize', resizeMatrix);
 resizeMatrix();
 
 function drawMatrix() {
-    mctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+    // Black background with slight fade trail
+    mctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
     mctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
-    mctx.fillStyle = '#333';
-    mctx.font = '16px monospace';
-    for (let i = 0; i < matrixDrops.length; i++) {
+
+    // Set font
+    mctx.font = `${fontSize}px 'Courier New', monospace`;
+    mctx.textAlign = 'center';
+
+    for (let i = 0; i < drops.length; i++) {
+        // Random character
         const char = matrixChars[Math.floor(Math.random() * matrixChars.length)];
-        const x = i * 20;
-        const y = matrixDrops[i] * 20;
+        const x = i * fontSize + fontSize / 2;
+        const y = drops[i] * fontSize + fontSize / 2;
+
+        // Neon blue/grey glow
+        const brightness = Math.random() * 0.6 + 0.4;
+        // Mix of blue and grey: blue component high, green and red vary
+        const r = Math.floor(80 + 60 * brightness);
+        const g = Math.floor(120 + 100 * brightness);
+        const b = Math.floor(200 + 55 * brightness);
+        const color = `rgba(${r}, ${g}, ${b}, ${0.8 + 0.2 * brightness})`;
+
+        mctx.shadowColor = `rgba(0, 180, 255, ${0.3 * brightness})`;
+        mctx.shadowBlur = 20;
+        mctx.fillStyle = color;
         mctx.fillText(char, x, y);
+
+        // Reset shadow
+        mctx.shadowBlur = 0;
+
+        // Move down
         if (y > matrixCanvas.height && Math.random() > 0.975) {
-            matrixDrops[i] = 0;
+            drops[i] = 0;
         }
-        matrixDrops[i]++;
+        drops[i]++;
     }
 }
 setInterval(drawMatrix, 50);
@@ -71,10 +99,7 @@ form.addEventListener('submit', async (e) => {
         const response = await fetch('/api/donate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                phone: phone,
-                amount: amount
-            })
+            body: JSON.stringify({ phone, amount })
         });
 
         const result = await response.json();
@@ -85,11 +110,6 @@ form.addEventListener('submit', async (e) => {
 
         processing.style.display = 'none';
         success.style.display = 'block';
-
-        // Stop matrix rain during celebration
-        setTimeout(() => {
-            // Keep success visible
-        }, 100);
 
     } catch (error) {
         alert(`❌ Payment failed: ${error.message}`);
