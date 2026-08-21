@@ -97,7 +97,7 @@ form.addEventListener('submit', async (e) => {
         return;
     }
 
-    // Validate phone number (Tanzania format)
+    // Validate phone number
     const phoneRegex = /^255[0-9]{9}$/;
     if (!phoneRegex.test(phone)) {
         alert('Please enter a valid Tanzania phone number (e.g., 255XXXXXXXXX)');
@@ -114,16 +114,15 @@ form.addEventListener('submit', async (e) => {
     processing.style.display = 'block';
     success.style.display = 'none';
 
-    // ─── Call Halopesa API ───
+    // ─── Call SonicPesa API ───
     try {
-        const response = await fetch('https://your-halopesa-api.com/donate', {
+        const response = await fetch('/api/donate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 phone: phone,
                 amount: amount,
-                network: network,
-                receiver: '0636756591'
+                network: network
             })
         });
 
