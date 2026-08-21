@@ -9,17 +9,13 @@ app.use(express.static(__dirname));
 
 // ─── SonicPesa Configuration ───
 const ACCESS_KEY = process.env.SONICPESA_API_KEY;
-const SECRET_KEY = process.env.SONICPESA_API_SECRET;
 const ENV = process.env.SONICPESA_ENV || 'sandbox';
 
-// ─── Use the correct SonicPesa endpoint ───
-const BASE_URL = 'https://api.sonicpesa.com'; // No /v1 – correct base
+// ─── Correct SonicPesa endpoint ───
+const BASE_URL = 'https://api.sonicpesa.com/v1';
 
 console.log(`🔗 SonicPesa Environment: ${ENV}`);
-console.log(`📡 API Base URL: ${BASE_URL}`);
-
-// ─── Basic Auth ───
-const auth = Buffer.from(`${ACCESS_KEY}:${SECRET_KEY}`).toString('base64');
+console.log(`📡 API URL: ${BASE_URL}`);
 
 // ─── Donation Endpoint ───
 app.post('/api/donate', async (req, res) => {
@@ -36,27 +32,27 @@ app.post('/api/donate', async (req, res) => {
         const cleanPhone = phone.replace(/\D/g, '');
         const reference = `BIGDONATE-${Date.now()}`;
 
-        // ─── SonicPesa Payload ───
+        // ─── SonicPesa Payload (based on their curl example) ───
         const payload = {
             phone: cleanPhone,
             amount: parseInt(amount),
-            network: 'VODACOM',
+            currency: 'TZS',
             reference: reference,
             callback_url: `${req.protocol}://${req.get('host')}/api/webhook`
         };
 
         console.log('📤 Sending to SonicPesa:', JSON.stringify(payload, null, 2));
 
-        // ─── Try the correct SonicPesa endpoint ───
+        // ─── Use the correct endpoint and authentication ───
         const response = await axios.post(
-            `${BASE_URL}/payment/create`,  // Correct endpoint
+            `${BASE_URL}/pay`,  // Correct endpoint from SonicPesa website
             payload,
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${auth}`
+                    'X-API-KEY': ACCESS_KEY  // Correct authentication header
                 },
-                timeout: 45000 // 45 seconds timeout
+                timeout: 45000
             }
         );
 
@@ -65,7 +61,7 @@ app.post('/api/donate', async (req, res) => {
         if (response.data && response.data.status === 'pending') {
             return res.json({
                 success: true,
-                transactionId: response.data.transaction_id,
+                transactionId: response.data.transaction_id || response.data.id,
                 message: 'USSD prompt sent to your phone'
             });
         } else {
@@ -86,8 +82,7 @@ app.post('/api/donate', async (req, res) => {
                 message: error.response.data?.message || 'Payment gateway error'
             });
         } else if (error.request) {
-            console.error('No response from SonicPesa – API might be down or wrong endpoint.');
-            console.error('Request details:', error.request);
+            console.error('No response from SonicPesa');
             return res.status(500).json({
                 success: false,
                 message: 'SonicPesa API is not responding. Please try again later.'
@@ -105,8 +100,7 @@ app.post('/api/donate', async (req, res) => {
 // ─── Webhook ───
 app.post('/api/webhook', async (req, res) => {
     try {
-        const data = req.body;
-        console.log(`[Webhook] Received:`, JSON.stringify(data, null, 2));
+        console.log('[Webhook] Received:', JSON.stringify(req.body, null, 2));
         res.status(200).json({ received: true });
     } catch (error) {
         console.error('[Webhook] Error:', error);
