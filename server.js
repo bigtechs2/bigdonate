@@ -7,17 +7,20 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// ─── SonicPesa Configuration ───
-const SONICPESA_API_KEY = process.env.SONICPESA_API_KEY;
-const SONICPESA_API_SECRET = process.env.SONICPESA_API_SECRET;
-const SONICPESA_ENV = process.env.SONICPESA_ENV || 'sandbox';
+// ─── SonicPesa Config ───
+const ACCESS_KEY = process.env.SONICPESA_API_KEY;
+const SECRET_KEY = process.env.SONICPESA_API_SECRET;
+const ENV = process.env.SONICPESA_ENV || 'sandbox';
 
-const SONICPESA_BASE_URL = SONICPESA_ENV === 'production' || SONICPESA_ENV === 'live'
+const BASE_URL = ENV === 'production' || ENV === 'live'
     ? 'https://api.sonicpesa.com/v1'
     : 'https://sandbox-api.sonicpesa.com/v1';
 
-console.log(`🔗 SonicPesa Environment: ${SONICPESA_ENV}`);
-console.log(`📡 API URL: ${SONICPESA_BASE_URL}`);
+console.log(`🔗 SonicPesa Environment: ${ENV}`);
+console.log(`📡 API URL: ${BASE_URL}`);
+
+// ─── Helper: Basic Auth ───
+const authHeader = 'Basic ' + Buffer.from(`${ACCESS_KEY}:${SECRET_KEY}`).toString('base64');
 
 // ─── Donation Endpoint ───
 app.post('/api/donate', async (req, res) => {
@@ -34,24 +37,30 @@ app.post('/api/donate', async (req, res) => {
         const cleanPhone = phone.replace(/\D/g, '');
         const paymentRef = `BIGDONATE-${Date.now()}`;
 
-        // ─── SonicPesa API Call ───
+        // ─── SonicPesa Payload ───
+        const payload = {
+            phone: cleanPhone,
+            amount: parseInt(amount),
+            network: 'VODACOM', // SonicPesa will detect if omitted, but we set default
+            reference: paymentRef,
+            callback_url: `${req.protocol}://${req.get('host')}/api/webhook`
+        };
+
+        console.log('📤 Sending to SonicPesa:', payload);
+
         const response = await axios.post(
-            `${SONICPESA_BASE_URL}/payments`,
-            {
-                phone: cleanPhone,
-                amount: parseInt(amount),
-                network: 'VODACOM',
-                callback_url: `${req.protocol}://${req.get('host')}/api/webhook`,
-                reference: paymentRef
-            },
+            `${BASE_URL}/payments`,
+            payload,
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${SONICPESA_API_KEY}`
+                    'Authorization': authHeader
                 },
                 timeout: 30000
             }
         );
+
+        console.log('📥 SonicPesa Response:', response.data);
 
         if (response.data && response.data.status === 'pending') {
             return res.json({
@@ -67,11 +76,28 @@ app.post('/api/donate', async (req, res) => {
         }
 
     } catch (error) {
-        console.error('[SonicPesa] Error:', error.response?.data || error.message);
-        return res.status(500).json({
-            success: false,
-            message: error.response?.data?.message || 'Payment failed. Please try again.'
-        });
+        // ─── Detailed error logging ───
+        console.error('❌ SonicPesa Error:');
+        if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Data:', error.response.data);
+            return res.status(500).json({
+                success: false,
+                message: error.response.data?.message || error.response.data?.error || 'Payment failed. Please try again.'
+            });
+        } else if (error.request) {
+            console.error('No response from SonicPesa');
+            return res.status(500).json({
+                success: false,
+                message: 'No response from payment gateway. Please try again.'
+            });
+        } else {
+            console.error('Error:', error.message);
+            return res.status(500).json({
+                success: false,
+                message: error.message || 'Payment failed. Please try again.'
+            });
+        }
     }
 });
 
